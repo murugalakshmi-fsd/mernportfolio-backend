@@ -249,7 +249,7 @@ router.post("/admin-login", async (req, res) => {
     }
     // Generate JWT token
     const token = jwt.sign({ username: user.username }, secretKey);
-    res.json({ token });
+    res.send(200).send({message:"Login Success",token:token})
   } catch (error) {
     console.error("Login failed:", error);
     res.status(500).send({ message: "Internal server error" });
