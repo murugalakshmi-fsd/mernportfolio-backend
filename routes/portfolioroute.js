@@ -14,7 +14,7 @@ const {
 } = require("../modules/portfoliomodule.js");
 const { User } = require("../modules/usermodule.js");
 //get all portfolio data
-router.get("/get-portfolio-data", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const intros = await Intro.find();
     const abouts = await About.find();
