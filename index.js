@@ -11,8 +11,11 @@ const portfolioroute=require('./routes/portfolioroute');
 app.use(cors()); 
 app.use(express.json());
 app.use(bodyParser.json());
+app.get('/', (req, res) => {
+    res.send('Hello World');
+  });
 
-app.use("/api/portfolio",portfolioroute)
+app.use("/portfolio",portfolioroute)
 const port=process.env.PORT;
 
 app.listen(port, ()=>{
