@@ -1,18 +1,17 @@
-const router = require("express").Router();
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
-require("dotenv").config();
-const {
+import { Router } from "express";
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import {
   Intro,
   About,
   Project,
   Contact,
   Experience,
   Course,
-} = require("../modules/portfoliomodule.js");
-const { User } = require("../modules/usermodule.js");
+} from "../modules/portfoliomodule.mjs";
+
+const router = Router();
+import { User } from "../modules/adminmodule.mjs";
 //get all portfolio data
 router.get("/", async (req, res) => {
   try {
@@ -199,7 +198,7 @@ router.post("/update-course", async (req, res) => {
   }
 });
 
-//delete project
+//delete course
 router.post("/delete-course", async (req, res) => {
   try {
     const course = await Course.findOneAndDelete({ _id: req.body._id });
@@ -231,53 +230,6 @@ router.post("/update-contact", async (req, res) => {
   }
 });
 
-//admin login
-
-router.post("/admin-login", async (req, res) => {
-  const { username, password } = req.body;
-  const secretKey = process.env.SECRET_KEY;
-  try {
-    // Find user by username
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(401).send({ message: "Invalid username " });
-    }
-    // Check if password matches
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).send({ message: "Invalid password " });
-    }
-    // Generate JWT token
-    const token = jwt.sign({ username: user.username }, secretKey);
-    res.json({ token });
-  } catch (error) {
-    console.error("Login failed:", error);
-    res.status(500).send({ message: "Internal server error" });
-  }
-});
-
-// Register route
-router.post("/admin-register", async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    // Check if username already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: "Username already exists" });
-    }
-    // Hash the password
-    const saltRounds = parseInt(process.env.SALT_ROUNDS);
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    // Create a new user with the hashed password
-    const newUser = new User({ username, password: hashedPassword });
-    // Save the user to the database
-    await newUser.save();
-    res.status(201).json({ message: "User created successfully" });
-  } catch (error) {
-    console.error("Registration failed:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
 
 router.get("/export-pdf", async (req, res) => {
   try {
@@ -374,4 +326,5 @@ router.get("/export-pdf", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
+
