@@ -68,5 +68,37 @@ router.post("/admin-login", async (req, res) => {
       }
     }
   );
+// Reset password - Update password with new one
+router.post("/reset-password", async (req, res) => {
+  const { username, newPassword, confirmPassword } = req.body;
+  
+  try {
+      // Find user by username (or you can use email, whichever is suitable)
+      const user = await User.findOne({ username });
+
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // Validate new password
+      if (newPassword !== confirmPassword) {
+          return res.status(400).json({ message: "Passwords do not match" });
+      }
+
+      // Hash the new password
+      const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update user's password
+      user.password = hashedPassword;
+      await user.save();
+
+      res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+      console.error("Reset password failed:", error);
+      res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
   export default router;

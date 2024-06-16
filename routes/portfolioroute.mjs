@@ -9,11 +9,12 @@ import {
   Experience,
   Course,
 } from "../modules/portfoliomodule.mjs";
+import authMiddleware from "../middleware/authmiddleware.mjs";
 
 const router = Router();
 import { User } from "../modules/adminmodule.mjs";
 //get all portfolio data
-router.get("/", async (req, res) => {
+router.get("/",authMiddleware,async (req, res) => {
   try {
     const intros = await Intro.find();
     const abouts = await About.find();
@@ -36,7 +37,7 @@ router.get("/", async (req, res) => {
 });
 
 //update Intro
-router.post("/update-intro", async (req, res) => {
+router.post("/update-intro",authMiddleware,async (req, res) => {
   try {
     const intro = await Intro.findOneAndUpdate(
       { _id: req.body._id },
@@ -54,7 +55,7 @@ router.post("/update-intro", async (req, res) => {
 });
 
 //update About
-router.post("/update-about", async (req, res) => {
+router.post("/update-about",authMiddleware,async (req, res) => {
   try {
     const about = await About.findOneAndUpdate(
       { _id: req.body._id },
@@ -72,7 +73,7 @@ router.post("/update-about", async (req, res) => {
 });
 
 //add experience
-router.post("/add-experience", async (req, res) => {
+router.post("/add-experience",authMiddleware,async (req, res) => {
   try {
     const experience = new Experience(req.body);
     await experience.save();
@@ -87,7 +88,7 @@ router.post("/add-experience", async (req, res) => {
 });
 
 //update experience
-router.post("/update-experience", async (req, res) => {
+router.post("/update-experience",authMiddleware,async (req, res) => {
   try {
     const experience = await Experience.findOneAndUpdate(
       { _id: req.body._id },
@@ -105,7 +106,7 @@ router.post("/update-experience", async (req, res) => {
 });
 
 //delete experience
-router.post("/delete-experience", async (req, res) => {
+router.post("/delete-experience",authMiddleware,async (req, res) => {
   try {
     const experience = await Experience.findOneAndDelete({ _id: req.body._id });
     res.status(200).send({
@@ -119,7 +120,7 @@ router.post("/delete-experience", async (req, res) => {
 });
 
 //add project
-router.post("/add-project", async (req, res) => {
+router.post("/add-project",authMiddleware,async (req, res) => {
   try {
     const project = new Project(req.body);
     await project.save();
@@ -134,7 +135,7 @@ router.post("/add-project", async (req, res) => {
 });
 
 //update project
-router.post("/update-project", async (req, res) => {
+router.post("/update-project",authMiddleware,async (req, res) => {
   try {
     const project = await Project.findOneAndUpdate(
       { _id: req.body._id },
@@ -152,7 +153,7 @@ router.post("/update-project", async (req, res) => {
 });
 
 //delete project
-router.post("/delete-project", async (req, res) => {
+router.post("/delete-project",authMiddleware,async (req, res) => {
   try {
     const project = await Project.findOneAndDelete({ _id: req.body._id });
     res.status(200).send({
@@ -166,7 +167,7 @@ router.post("/delete-project", async (req, res) => {
 });
 
 //add course
-router.post("/add-course", async (req, res) => {
+router.post("/add-course",authMiddleware,async (req, res) => {
   try {
     const course = new Course(req.body);
     await course.save();
@@ -181,7 +182,7 @@ router.post("/add-course", async (req, res) => {
 });
 
 //update course
-router.post("/update-course", async (req, res) => {
+router.post("/update-course",authMiddleware,async (req, res) => {
   try {
     const course = await Course.findOneAndUpdate(
       { _id: req.body._id },
@@ -199,7 +200,7 @@ router.post("/update-course", async (req, res) => {
 });
 
 //delete course
-router.post("/delete-course", async (req, res) => {
+router.post("/delete-course",authMiddleware,async (req, res) => {
   try {
     const course = await Course.findOneAndDelete({ _id: req.body._id });
     res.status(200).send({
@@ -213,7 +214,7 @@ router.post("/delete-course", async (req, res) => {
 });
 
 //update-contact
-router.post("/update-contact", async (req, res) => {
+router.post("/update-contact",authMiddleware,async (req, res) => {
   try {
     const contact = await Contact.findOneAndUpdate(
       { _id: req.body._id },
@@ -231,7 +232,7 @@ router.post("/update-contact", async (req, res) => {
 });
 
 
-router.get("/export-pdf", async (req, res) => {
+router.get("/export-pdf",authMiddleware,async (req, res) => {
   try {
    // Fetch data from the database
    const intros = await Intro.find().lean();
