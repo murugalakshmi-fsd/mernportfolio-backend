@@ -1,331 +1,291 @@
-import { Router } from "express";
-import PDFDocument from "pdfkit";
-import fs from "fs";
-import {
-  Intro,
-  About,
-  Project,
-  Contact,
-  Experience,
-  Course,
-} from "../modules/portfoliomodule.mjs";
-import authMiddleware from "../middleware/authmiddleware.mjs";
+import { Router } from 'express';
+import Portfolio from '../modules/portfoliomodule.mjs';
+import authMiddleware from '../middleware/authmiddleware.mjs';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fs from 'fs';
 
 const router = Router();
-import { User } from "../modules/adminmodule.mjs";
-//get all portfolio data
-router.get("/",authMiddleware,async (req, res) => {
-  try {
-    const intros = await Intro.find();
-    const abouts = await About.find();
-    const projects = await Project.find();
-    const experiences = await Experience.find();
-    const courses = await Course.find();
-    const contact = await Contact.find();
 
-    res.status(200).send({
-      intros: intros[0],
-      abouts: abouts[0],
-      projects: projects,
-      experiences: experiences,
-      courses: courses,
-      contacts: contact[0],
-    });
+// Fetch portfolio data
+router.get('/', authMiddleware, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ user: req.user._id }).populate('user');
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    res.status(200).json({ portfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error fetching portfolio:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//update Intro
-router.post("/update-intro",authMiddleware,async (req, res) => {
+// Update Intro
+router.post('/update-intro', authMiddleware, async (req, res) => {
   try {
-    const intro = await Intro.findOneAndUpdate(
-      { _id: req.body._id },
-      req.body,
+    const { _id, ...introData } = req.body;
+    const updatedPortfolio = await Portfolio.findOneAndUpdate(
+      { user: req.user._id },
+      { $set: { intro: introData } },
       { new: true }
     );
-    res.status(200).send({
-      data: intro,
-      success: true,
-      message: "Intro Updated Successfully",
-    });
+    res.status(200).json({ portfolio: updatedPortfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error updating intro:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//update About
-router.post("/update-about",authMiddleware,async (req, res) => {
+// Update About
+router.post('/update-about', authMiddleware, async (req, res) => {
   try {
-    const about = await About.findOneAndUpdate(
-      { _id: req.body._id },
-      req.body,
+    const { _id, ...aboutData } = req.body;
+    const updatedPortfolio = await Portfolio.findOneAndUpdate(
+      { user: req.user._id },
+      { $set: { about: aboutData } },
       { new: true }
     );
-    res.status(200).send({
-      data: about,
-      success: true,
-      message: "About Updated Successfully",
-    });
+    res.status(200).json({ portfolio: updatedPortfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error updating about:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//add experience
-router.post("/add-experience",authMiddleware,async (req, res) => {
+// Add Experience
+router.post('/add-experience', authMiddleware, async (req, res) => {
   try {
-    const experience = new Experience(req.body);
-    await experience.save();
-    res.status(200).send({
-      data: experience,
-      success: true,
-      message: "Experience added successfully",
-    });
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-
-//update experience
-router.post("/update-experience",authMiddleware,async (req, res) => {
-  try {
-    const experience = await Experience.findOneAndUpdate(
-      { _id: req.body._id },
-      req.body,
+    const newExperience = req.body;
+    const updatedPortfolio = await Portfolio.findOneAndUpdate(
+      { user: req.user._id },
+      { $push: { experiences: newExperience } },
       { new: true }
     );
-    res.status(200).send({
-      data: experience,
-      success: true,
-      message: "Experience updated successfully",
-    });
+    res.status(200).json({ portfolio: updatedPortfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error adding experience:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//delete experience
-router.post("/delete-experience",authMiddleware,async (req, res) => {
+// Update Experience
+router.post('/update-experience/:expId', authMiddleware, async (req, res) => {
   try {
-    const experience = await Experience.findOneAndDelete({ _id: req.body._id });
-    res.status(200).send({
-      data: experience,
-      success: true,
-      message: "Experience deleted successfully",
-    });
+    const { expId } = req.params;
+    const { _id, ...updatedExperience } = req.body;
+    const portfolio = await Portfolio.findOne({ user: req.user._id });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    const experienceIndex = portfolio.experiences.findIndex(exp => exp._id == expId);
+    if (experienceIndex === -1) {
+      return res.status(404).json({ message: 'Experience not found' });
+    }
+    portfolio.experiences[experienceIndex] = updatedExperience;
+    await portfolio.save();
+    res.status(200).json({ portfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error updating experience:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//add project
-router.post("/add-project",authMiddleware,async (req, res) => {
+// Delete Experience
+router.delete('/delete-experience/:expId', authMiddleware, async (req, res) => {
   try {
-    const project = new Project(req.body);
-    await project.save();
-    res.status(200).send({
-      data: project,
-      success: true,
-      message: "Project added successfully",
-    });
+    const { expId } = req.params;
+    const portfolio = await Portfolio.findOne({ user: req.user._id });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    portfolio.experiences = portfolio.experiences.filter(exp => exp._id != expId);
+    await portfolio.save();
+    res.status(200).json({ portfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error deleting experience:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//update project
-router.post("/update-project",authMiddleware,async (req, res) => {
+// Add Project
+router.post('/add-project', authMiddleware, async (req, res) => {
   try {
-    const project = await Project.findOneAndUpdate(
-      { _id: req.body._id },
-      req.body,
+    const newProject = req.body;
+    const updatedPortfolio = await Portfolio.findOneAndUpdate(
+      { user: req.user._id },
+      { $push: { projects: newProject } },
       { new: true }
     );
-    res.status(200).send({
-      data: project,
-      success: true,
-      message: "Project updated successfully",
-    });
+    res.status(200).json({ portfolio: updatedPortfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error adding project:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//delete project
-router.post("/delete-project",authMiddleware,async (req, res) => {
+// Update Project
+router.post('/update-project/:projectId', authMiddleware, async (req, res) => {
   try {
-    const project = await Project.findOneAndDelete({ _id: req.body._id });
-    res.status(200).send({
-      data: project,
-      success: true,
-      message: "Project deleted successfully",
-    });
+    const { projectId } = req.params;
+    const { _id, ...updatedProject } = req.body;
+    const portfolio = await Portfolio.findOne({ user: req.user._id });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    const projectIndex = portfolio.projects.findIndex(proj => proj._id == projectId);
+    if (projectIndex === -1) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    portfolio.projects[projectIndex] = updatedProject;
+    await portfolio.save();
+    res.status(200).json({ portfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error updating project:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//add course
-router.post("/add-course",authMiddleware,async (req, res) => {
+// Delete Project
+router.delete('/delete-project/:projectId', authMiddleware, async (req, res) => {
   try {
-    const course = new Course(req.body);
-    await course.save();
-    res.status(200).send({
-      data: course,
-      success: true,
-      message: "Course added successfully",
-    });
+    const { projectId } = req.params;
+    const portfolio = await Portfolio.findOne({ user: req.user._id });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    portfolio.projects = portfolio.projects.filter(proj => proj._id != projectId);
+    await portfolio.save();
+    res.status(200).json({ portfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error deleting project:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//update course
-router.post("/update-course",authMiddleware,async (req, res) => {
+// Add Course
+router.post('/add-course', authMiddleware, async (req, res) => {
   try {
-    const course = await Course.findOneAndUpdate(
-      { _id: req.body._id },
-      req.body,
+    const newCourse = req.body;
+    const updatedPortfolio = await Portfolio.findOneAndUpdate(
+      { user: req.user._id },
+      { $push: { courses: newCourse } },
       { new: true }
     );
-    res.status(200).send({
-      data: course,
-      success: true,
-      message: "Course updated successfully",
-    });
+    res.status(200).json({ portfolio: updatedPortfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error adding course:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//delete course
-router.post("/delete-course",authMiddleware,async (req, res) => {
+// Update Course
+router.post('/update-course/:courseId', authMiddleware, async (req, res) => {
   try {
-    const course = await Course.findOneAndDelete({ _id: req.body._id });
-    res.status(200).send({
-      data: course,
-      success: true,
-      message: "Course deleted successfully",
-    });
+    const { courseId } = req.params;
+    const { _id, ...updatedCourse } = req.body;
+    const portfolio = await Portfolio.findOne({ user: req.user._id });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    const courseIndex = portfolio.courses.findIndex(course => course._id == courseId);
+    if (courseIndex === -1) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+    portfolio.courses[courseIndex] = updatedCourse;
+    await portfolio.save();
+    res.status(200).json({ portfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error updating course:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-//update-contact
-router.post("/update-contact",authMiddleware,async (req, res) => {
+// Delete Course
+router.delete('/delete-course/:courseId', authMiddleware, async (req, res) => {
   try {
-    const contact = await Contact.findOneAndUpdate(
-      { _id: req.body._id },
-      req.body,
+    const { courseId } = req.params;
+    const portfolio = await Portfolio.findOne({ user: req.user._id });
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    portfolio.courses = portfolio.courses.filter(course => course._id != courseId);
+    await portfolio.save();
+    res.status(200).json({ portfolio });
+  } catch (error) {
+    console.error('Error deleting course:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update Contact
+router.post('/update-contact', authMiddleware, async (req, res) => {
+  try {
+    const { _id, ...contactData } = req.body;
+    const updatedPortfolio = await Portfolio.findOneAndUpdate(
+      { user: req.user._id },
+      { $set: { contact: contactData } },
       { new: true }
     );
-    res.status(200).send({
-      data: contact,
-      success: true,
-      message: "Contact Updated Successfully",
-    });
+    res.status(200).json({ portfolio: updatedPortfolio });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error updating contact:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-router.get("/export-pdf",authMiddleware,async (req, res) => {
+router.get('/export-pdf', authMiddleware, async (req, res) => {
   try {
-   // Fetch data from the database
-   const intros = await Intro.find().lean();
-   const abouts = await About.find().lean();
-   const experiences = await Experience.find().lean();
-   const projects = await Project.find().lean();
-   const courses = await Course.find().lean();
-   const contacts = await Contact.find().lean();
+    const portfolio = await Portfolio.findOne({ user: req.user._id }).populate('user');
+    if (!portfolio) {
+      return res.status(404).json({ message: 'Portfolio not found' });
+    }
 
-   // Create a new PDF document
-   const doc = new PDFDocument();
-   doc.pipe(fs.createWriteStream("portfolio.pdf")); // Save the PDF to a file
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage();
 
-   // Populate the PDF document with data
-   doc.fontSize(16).text("Portfolio Export", { align: "center" });
-   doc.moveDown();
+    // Set page size and fonts
+    page.setSize([600, 800]);
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-   // Add Introduction section
-   doc.fontSize(12).text("Introduction:", { underline: true });
-   intros.forEach((intro) => {
-     doc.text(`Welcome Text: ${intro.welcomeText}`);
-     doc.text(`First Name: ${intro.firstName}`);
-     doc.text(`Last Name: ${intro.lastName}`);
-     doc.text(`Caption: ${intro.caption}`);
-     doc.text(`Description: ${intro.description}`);
-     doc.moveDown();
-   });
+    // Add portfolio data to PDF
+    page.drawText(`Welcome ${portfolio.intro.firstName} ${portfolio.intro.lastName}`, {
+      x: 50,
+      y: 700,
+      size: 24,
+      font,
+      color: rgb(0, 0, 0),
+    });
 
-   // Add About section
-   doc.fontSize(12).text("About:", { underline: true });
-   abouts.forEach((about) => {
-     doc.text(`Description 1: ${about.description1}`);
-     doc.text(`Description 2: ${about.description2}`);
-     doc.text("Skills:");
-     about.skills.forEach((skill) => doc.text(`- ${skill}`));
-     doc.moveDown();
-   });
+    page.drawText(`About Me:`, {
+      x: 50,
+      y: 670,
+      size: 18,
+      font,
+      color: rgb(0, 0, 0),
+    });
 
-   // Add Experiences section
-   doc.fontSize(12).text("Experiences:", { underline: true });
-   experiences.forEach((experience, index) => {
-     doc.text(`Experience ${index + 1}:`);
-     doc.text(`Title: ${experience.title}`);
-     doc.text(`Period: ${experience.period}`);
-     doc.text(`Company: ${experience.company}`);
-     doc.text(`Description: ${experience.description}`);
-     doc.moveDown();
-   });
+    page.drawText(`Skills: ${portfolio.about.skills.join(', ')}`, {
+      x: 70,
+      y: 640,
+      size: 12,
+      font,
+      color: rgb(0, 0, 0),
+    });
 
-   // Add Projects section
-   doc.fontSize(12).text("Projects:", { underline: true });
-   projects.forEach((project, index) => {
-     doc.text(`Project ${index + 1}:`);
-     doc.text(`Title: ${project.title}`);
-     doc.text(`Description: ${project.description}`);
-     doc.text(`Link: ${project.link}`);
-     doc.text("Technologies:");
-     project.technologies.forEach((tech) => doc.text(`- ${tech}`));
-     doc.moveDown();
-   });
+    // Add more sections as needed (experiences, projects, courses, contact)
 
-   // Add Courses section
-   doc.fontSize(12).text("Courses:", { underline: true });
-   courses.forEach((course, index) => {
-     doc.text(`Course ${index + 1}:`);
-     doc.text(`Title: ${course.title}`);
-     doc.text(`Description: ${course.description}`);
-     doc.text(`Link: ${course.link}`);
-     doc.moveDown();
-   });
-
-   // Add Contact section
-   doc.fontSize(12).text("Contact:", { underline: true });
-   contacts.forEach((contact) => {
-     doc.text(`Name: ${contact.name}`);
-     doc.text(`Gender: ${contact.gender}`);
-     doc.text(`Email: ${contact.email}`);
-     doc.text(`Mobile: ${contact.mobile}`);
-     doc.text(`Age: ${contact.age}`);
-     doc.text(`Address: ${contact.address}`);
-     doc.moveDown();
-   });
-
-   // Finalize the PDF document
-   doc.end();
-
-   // Send PDF file to client
-   res.status(200).download("portfolio.pdf");
+    // Serialize PDF to a buffer and send it as a response
+    const pdfBytes = await pdfDoc.save();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=portfolio.pdf');
+    res.send(pdfBytes);
   } catch (error) {
-    console.error("Error exporting PDF:", error);
-    res.status(500).json({ error: "An error occurred while exporting PDF" });
+    console.error('Error exporting portfolio as PDF:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
 
 export default router;
-

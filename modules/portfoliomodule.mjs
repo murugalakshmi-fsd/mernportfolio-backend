@@ -1,138 +1,139 @@
+
 import mongoose from 'mongoose';
 
-const introSchema = new mongoose.Schema({
+const portfolioSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+  },
+  intro: {
     welcomeText: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     firstName: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     lastName: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     caption: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: true
-    }
-});
-
-const aboutSchema = new mongoose.Schema({
+      type: String,
+      required: true,
+    },
+  },
+  about: {
     lottieUrl: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description1: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description2: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     skills: {
-        type: Array,
-        required: true
-    }
-});
-
-const experienceSchema = new mongoose.Schema({
+      type: [String],
+      required: true,
+    },
+  },
+  experiences: [{
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     period: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     company: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: true
-    }
-});
-
-const projectSchema = new mongoose.Schema({
+      type: String,
+      required: true,
+    },
+  }],
+  projects: [{
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     image: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     link: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     technologies: {
-        type: Array,
-        required: true
-    }
-});
-
-const courseSchema = new mongoose.Schema({
+      type: [String],
+      required: true,
+    },
+  }],
+  courses: [{
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     image: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     link: {
-        type: String,
-        required: true
-    }
-});
-
-const contactSchema = new mongoose.Schema({
+      type: String,
+      required: true,
+    },
+  }],
+  contact: {
     name: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     gender: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     email: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     mobile: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     age: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     address: {
-        type: String,
-        required: true
-    }
+      type: String,
+      required: true,
+    },
+  },
 });
 
-export const Intro = mongoose.model("intros", introSchema);
-export const About = mongoose.model("Abouts", aboutSchema);
-export const Experience = mongoose.model("experiences", experienceSchema);
-export const Project = mongoose.model("projects", projectSchema);
-export const Course = mongoose.model("courses", courseSchema);
-export const Contact = mongoose.model("contacts", contactSchema);
+const Portfolio = mongoose.model('Portfolio', portfolioSchema);
+
+export default Portfolio;
