@@ -498,7 +498,6 @@ router.post('/update-contact', authMiddleware, async (req, res) => {
 //     res.status(500).json({ error: 'Internal server error' });
 //   }
 // });
-
 router.get('/export-pdf', authMiddleware, async (req, res) => {
   try {
     // Fetch portfolio data for the authenticated user
@@ -510,89 +509,76 @@ router.get('/export-pdf', authMiddleware, async (req, res) => {
 
     // Create a new PDF document
     const doc = new PDFDocument();
-    
-    // Set response headers
+
+    // Configure response headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=portfolio.pdf');
 
-    // Pipe the document to the response
+    // Pipe the PDF document to the response
     doc.pipe(res);
 
     // Add intro section
     doc.font('Helvetica-Bold')
       .fontSize(24)
-      .text(`Welcome ${portfolio.intro.firstName} ${portfolio.intro.lastName}`, {
-        align: 'left'
-      });
+      .text(`Welcome ${portfolio.intro.firstName} ${portfolio.intro.lastName}`, { align: 'center' })
+      .moveDown(1.5);
 
     // Add about section
     doc.fontSize(18)
-      .text('About Me:', {
-        align: 'left'
-      });
+      .text('About Me:', { underline: true })
+      .moveDown(0.5);
 
-    // Add skills
     doc.fontSize(12)
-      .text(`Skills: ${portfolio.about.skills.join(', ')}`, {
-        align: 'left'
-      });
+      .text(`Skills: ${portfolio.about.skills.join(', ')}`)
+      .moveDown(1.5);
 
     // Add experiences section
     doc.fontSize(18)
-      .text('Experiences:', {
-        align: 'left'
-      });
+      .text('Experiences:', { underline: true })
+      .moveDown(0.5);
 
-    let yOffset = doc.y;
     portfolio.experiences.forEach((experience, index) => {
       doc.fontSize(12)
-        .text(`${index + 1}. ${experience.title} at ${experience.company}`, {
-          align: 'left'
-        });
-      yOffset = doc.y;
+        .text(`${index + 1}. ${experience.title} at ${experience.company}`)
+        .moveDown(0.5);
     });
+
+    doc.moveDown(1.5);
 
     // Add projects section
     doc.fontSize(18)
-      .text('Projects:', {
-        align: 'left'
-      });
+      .text('Projects:', { underline: true })
+      .moveDown(0.5);
 
-    yOffset = doc.y;
     portfolio.projects.forEach((project, index) => {
       doc.fontSize(12)
-        .text(`${index + 1}. ${project.title}`, {
-          align: 'left'
-        });
-      yOffset = doc.y;
+        .text(`${index + 1}. ${project.title}`)
+        .moveDown(0.5);
     });
+
+    doc.moveDown(1.5);
 
     // Add courses section
     doc.fontSize(18)
-      .text('Courses:', {
-        align: 'left'
-      });
+      .text('Courses:', { underline: true })
+      .moveDown(0.5);
 
-    yOffset = doc.y;
     portfolio.courses.forEach((course, index) => {
       doc.fontSize(12)
-        .text(`${index + 1}. ${course.title}`, {
-          align: 'left'
-        });
-      yOffset = doc.y;
+        .text(`${index + 1}. ${course.title}`)
+        .moveDown(0.5);
     });
+
+    doc.moveDown(1.5);
 
     // Add contact section
     doc.fontSize(18)
-      .text('Contact:', {
-        align: 'left'
-      });
+      .text('Contact:', { underline: true })
+      .moveDown(0.5);
 
-    yOffset = doc.y;
     doc.fontSize(12)
-      .text(`Email: ${portfolio.contact.email}`, {
-        align: 'left'
-      });
+      .text(`Email: ${portfolio.contact.email}`)
+      .moveDown(1.5);
 
     // Finalize the PDF and end the stream
     doc.end();
