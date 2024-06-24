@@ -4,132 +4,117 @@ import mongoose from 'mongoose';
 const portfolioSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true,
+    ref: 'users',
+    required:true,
+    unique: true
   },
   intro: {
     welcomeText: {
       type: String,
-      required: true,
+      default: ''
     },
     firstName: {
       type: String,
-      required: true,
+      default: ''
     },
     lastName: {
       type: String,
-      required: true,
+      default: ''
     },
     caption: {
       type: String,
-      required: true,
+      default: ''
     },
-    description: {
-      type: String,
-      required: true,
     },
-  },
   about: {
     lottieUrl: {
       type: String,
-      required: true,
+      default: ''
     },
+   
     description1: {
       type: String,
-      required: true,
+      default: ''
     },
-    description2: {
-      type: String,
-      required: true,
-    },
+
     skills: {
       type: [String],
-      required: true,
+      default: ''
     },
   },
   experiences: [{
     title: {
       type: String,
-      required: true,
+      default: ''
     },
     period: {
       type: String,
-      required: true,
+      default: ''
     },
     company: {
       type: String,
-      required: true,
+      default: ''
     },
     description: {
       type: String,
-      required: true,
+      default: ''
     },
   }],
   projects: [{
     title: {
       type: String,
-      required: true,
+      default: ''
     },
     description: {
       type: String,
-      required: true,
+      default: ''
     },
     image: {
       type: String,
-      required: true,
+      default: ''
     },
     link: {
       type: String,
-      required: true,
+      default: ''
     },
     technologies: {
       type: [String],
-      required: true,
+      default: []
     },
   }],
   courses: [{
     title: {
       type: String,
-      required: true,
+      default: ''
     },
     description: {
       type: String,
-      required: true,
+      default: ''
     },
     image: {
       type: String,
-      required: true,
+      default: ''
     },
     link: {
       type: String,
-      required: true,
+      default: ''
     },
   }],
   contact: {
     name: {
       type: String,
-      required: true,
+      default: ''
     },
-    gender: {
-      type: String,
-      required: true,
-    },
+  
     email: {
       type: String,
-      required: true,
+      default: ''
     },
-    mobile: {
+    
+   
+    country: {
       type: String,
-      required: true,
-    },
-    age: {
-      type: String,
-      required: true,
-    },
-    address: {
-      type: String,
-      required: true,
+      default: '',
     },
   },
 });

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import validator from 'validator';
 
-const userSchema=new mongoose.Schema({
+const usersSchema=new mongoose.Schema({
     username:{
         type:String,
         required:true,
@@ -21,10 +21,11 @@ const userSchema=new mongoose.Schema({
         type:String,
         required:true
     },
+    tokens: [{ token: { type: String, required: true } }]
 });
 
 
 
-const User = mongoose.model('User', userSchema);
+const users = mongoose.model('users', usersSchema);
 
-export { User };
+export { users };

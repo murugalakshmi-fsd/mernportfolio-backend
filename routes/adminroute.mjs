@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { User } from '../modules/adminmodule.mjs';
+import { users } from '../modules/adminmodule.mjs';
 dotenv.config();
 //admin login
 const router=Router();
@@ -12,18 +12,21 @@ router.post("/admin-login", async (req, res) => {
     const secretKey = process.env.SECRET_KEY;
     try {
       // Find user by username
-      const user = await User.findOne({ username });
+      const user = await users.findOne({ username });
       if (!user) {
-        return res.status(401).send({ message: "Invalid username " });
+        return res.status(401).send({ message: "Invalid credientals" });
       }
       // Check if password matches
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        return res.status(401).send({ message: "Invalid password " });
+        return res.status(401).send({ message: "Invalid credientals" });
       }
       // Generate JWT token
-      const token = jwt.sign({ username: user.username }, secretKey);
-      res.json({ token });
+       const token = jwt.sign({ _id: user._id }, secretKey);
+       user.tokens = user.tokens || [];
+       user.tokens.push({ token });
+       await user.save();
+      res.status(200).json({success:true, token, user,message:"Login successful" });
     } catch (error) {
       console.error("Login failed:", error);
       res.status(500).send({ message: "Internal server error" });
@@ -47,7 +50,7 @@ router.post("/admin-login", async (req, res) => {
       const { username, email, password } = req.body;
       try {
         // Check if username or email already exists
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        const existingUser = await users.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
           return res.status(400).json({ message: "Username or Email already exists" });
         }
@@ -57,7 +60,7 @@ router.post("/admin-login", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
   
         // Create a new user with the hashed password
-        const newUser = new User({ username, email, password: hashedPassword });
+        const newUser = new users({ username, email, password: hashedPassword });
   
         // Save the user to the database
         await newUser.save();
@@ -74,7 +77,7 @@ router.post("/reset-password", async (req, res) => {
   
   try {
       // Find user by username (or you can use email, whichever is suitable)
-      const user = await User.findOne({ username });
+      const user = await users.findOne({ username });
 
       if (!user) {
           return res.status(404).json({ message: "User not found" });
